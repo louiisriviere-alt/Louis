@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes villes de France</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --text: #1d1d1f; --muted: #6b6b70;
+    --border: #e2e0da; --accent: #2a5bd7; --danger: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151517; --panel: #1f1f22; --text: #ececee; --muted: #9a9aa2;
+            --border: #333338; --accent: #6b93ff; --danger: #ff6b5b; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+         background: var(--bg); color: var(--text);
+         display: grid; grid-template-columns: 340px 1fr; }
+  aside { background: var(--panel); border-right: 1px solid var(--border);
+          display: flex; flex-direction: column; min-height: 0; }
+  header { padding: 16px 16px 8px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .count { color: var(--muted); font-size: 13px; }
+  .search { position: relative; padding: 8px 16px; }
+  input[type=search] { width: 100%; padding: 10px 12px; font: inherit; color: var(--text);
+         background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+  input[type=search]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  #suggestions { position: absolute; left: 16px; right: 16px; top: 100%; z-index: 1000;
+         list-style: none; margin: 0; padding: 4px 0; background: var(--panel);
+         border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+  #suggestions:empty { display: none; }
+  #suggestions li { padding: 8px 12px; cursor: pointer; }
+  #suggestions li small { color: var(--muted); }
+  #suggestions li:hover, #suggestions li.active { background: var(--bg); }
+  #list { list-style: none; margin: 0; padding: 0 8px; overflow-y: auto; flex: 1; }
+  #list li { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer; }
+  #list li:hover { background: var(--bg); }
+  #list .name { flex: 1; }
+  #list small { color: var(--muted); }
+  #list button { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+  #list button:hover { color: var(--danger); }
+  .empty { color: var(--muted); padding: 16px; font-size: 14px; }
+  footer { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  footer button, footer label { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 6px;
+         border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+  footer input { display: none; }
+  #map { height: 100%; min-height: 0; }
+  @media (max-width: 720px) {
+    body { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; }
+    #map { grid-row: 1; }
+    aside { grid-row: 2; border-right: none; border-top: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+<aside>
+  <header>
+    <h1>📍 Mes villes de France</h1>
+    <div class="count" id="count"></div>
+  </header>
+  <div class="search">
+    <input type="search" id="q" placeholder="Ajouter une ville (ex. Lyon)…" autocomplete="off">
+    <ul id="suggestions"></ul>
+  </div>
+  <ul id="list"></ul>
+  <footer>
+    <button id="export">Exporter</button>
+    <label>Importer<input type="file" id="import" accept="application/json"></label>
+    <button id="clear">Tout effacer</button>
+  </footer>
+</aside>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const STORAGE_KEY = 'villes-visitees';
+const API = 'https://geo.api.gouv.fr/communes';
+
+let cities = load();
+const markers = new Map();
+
+const map = L.map('map').setView([46.6, 2.4], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+  attribution: '&copy; contributeurs OpenStreetMap'
+}).addTo(map);
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cities)); } catch {}
+}
+
+function addCity(city) {
+  if (cities.some(c => c.code === city.code)) {
+    focusCity(city.code);
+    return;
+  }
+  cities.push(city);
+  save();
+  render();
+  focusCity(city.code);
+}
+function removeCity(code) {
+  cities = cities.filter(c => c.code !== code);
+  save();
+  render();
+}
+function focusCity(code) {
+  const m = markers.get(code);
+  if (m) { map.setView(m.getLatLng(), Math.max(map.getZoom(), 9)); m.openPopup(); }
+}
+
+function render() {
+  markers.forEach(m => m.remove());
+  markers.clear();
+  for (const c of cities) {
+    const m = L.marker([c.lat, c.lon]).addTo(map)
+      .bindPopup(`<b>${esc(c.nom)}</b><br>${esc(c.departement || '')}`);
+    markers.set(c.code, m);
+  }
+
+  const sorted = [...cities].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  const list = document.getElementById('list');
+  list.innerHTML = sorted.length ? '' : '<li class="empty">Aucune ville pour l’instant. Cherche une ville ci-dessus ou clique sur la carte.</li>';
+  for (const c of sorted) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="name">${esc(c.nom)} <small>${esc(c.departement || '')}</small></span><button title="Retirer">✕</button>`;
+    li.querySelector('.name').onclick = () => focusCity(c.code);
+    li.querySelector('button').onclick = () => removeCity(c.code);
+    list.appendChild(li);
+  }
+
+  const n = cities.length;
+  const deps = new Set(cities.map(c => c.departement).filter(Boolean)).size;
+  document.getElementById('count').textContent =
+    `${n} ville${n > 1 ? 's' : ''} · ${deps} département${deps > 1 ? 's' : ''}`;
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function toCity(c) {
+  return {
+    code: c.code,
+    nom: c.nom,
+    departement: c.departement ? `${c.departement.nom} (${c.departement.code})` : '',
+    lat: c.centre.coordinates[1],
+    lon: c.centre.coordinates[0]
+  };
+}
+
+// Recherche avec autocomplétion
+const q = document.getElementById('q');
+const sugg = document.getElementById('suggestions');
+let results = [], active = -1, timer;
+
+q.addEventListener('input', () => {
+  clearTimeout(timer);
+  const term = q.value.trim();
+  if (term.length < 2) { sugg.innerHTML = ''; results = []; return; }
+  timer = setTimeout(async () => {
+    try {
+      const res = await fetch(`${API}?nom=${encodeURIComponent(term)}&fields=nom,code,centre,departement,population&boost=population&limit=8`);
+      results = (await res.json()).filter(c => c.centre).map(toCity);
+    } catch { results = []; }
+    active = -1;
+    showSuggestions();
+  }, 200);
+});
+q.addEventListener('keydown', e => {
+  if (!results.length) return;
+  if (e.key === 'ArrowDown') { active = (active + 1) % results.length; showSuggestions(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { active = (active - 1 + results.length) % results.length; showSuggestions(); e.preventDefault(); }
+  else if (e.key === 'Enter') { pick(results[Math.max(active, 0)]); }
+  else if (e.key === 'Escape') { sugg.innerHTML = ''; }
+});
+function showSuggestions() {
+  sugg.innerHTML = '';
+  results.forEach((c, i) => {
+    const li = document.createElement('li');
+    if (i === active) li.className = 'active';
+    li.innerHTML = `${esc(c.nom)} <small>${esc(c.departement)}</small>`;
+    li.onmousedown = e => { e.preventDefault(); pick(c); };
+    sugg.appendChild(li);
+  });
+}
+function pick(c) {
+  addCity(c);
+  q.value = '';
+  sugg.innerHTML = '';
+  results = [];
+}
+
+// Clic sur la carte : ajoute la commune à cet endroit
+map.on('click', async e => {
+  try {
+    const res = await fetch(`${API}?lat=${e.latlng.lat}&lon=${e.latlng.lng}&fields=nom,code,centre,departement`);
+    const [c] = await res.json();
+    if (c && c.centre) addCity(toCity(c));
+  } catch {}
+});
+
+// Export / import / effacer
+document.getElementById('export').onclick = () => {
+  const blob = new Blob([JSON.stringify(cities, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mes-villes.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+document.getElementById('import').onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    for (const c of data) if (c.code && !cities.some(x => x.code === c.code)) cities.push(c);
+    save();
+    render();
+  } catch { alert('Fichier invalide'); }
+  e.target.value = '';
+};
+document.getElementById('clear').onclick = () => {
+  if (cities.length && confirm('Effacer toutes les villes ?')) { cities = []; save(); render(); }
+};
+
+render();
+</script>
+</body>
+</html>
