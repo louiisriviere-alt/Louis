@@ -18,38 +18,69 @@
   html, body { margin: 0; height: 100%; }
   body { font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
          background: var(--bg); color: var(--text);
-         display: grid; grid-template-columns: 340px 1fr; }
+         display: grid; grid-template-columns: 360px 1fr; }
+  [hidden] { display: none !important; }
   aside { background: var(--panel); border-right: 1px solid var(--border);
           display: flex; flex-direction: column; min-height: 0; }
   header { padding: 16px 16px 8px; }
   h1 { font-size: 18px; margin: 0 0 4px; }
   .count { color: var(--muted); font-size: 13px; }
+  .bar { display: flex; gap: 8px; align-items: center; padding: 4px 16px 8px; }
+  .tabs { display: flex; flex: 1; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .tabs button { flex: 1; font: inherit; font-size: 14px; padding: 6px; border: none; cursor: pointer;
+                 background: var(--panel); color: var(--text); }
+  .tabs button.on { background: var(--accent); color: #fff; }
+  select, input, textarea { font: inherit; color: var(--text); background: var(--bg);
+         border: 1px solid var(--border); border-radius: 8px; }
+  select { padding: 6px; }
+  input, textarea { width: 100%; padding: 8px 10px; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .search { position: relative; padding: 8px 16px; }
-  input[type=search] { width: 100%; padding: 10px 12px; font: inherit; color: var(--text);
-         background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
-  input[type=search]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  #suggestions { position: absolute; left: 16px; right: 16px; top: 100%; z-index: 1000;
+  .suggestions { position: absolute; left: 16px; right: 16px; top: 100%; z-index: 1000;
          list-style: none; margin: 0; padding: 4px 0; background: var(--panel);
          border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.15); }
-  #suggestions:empty { display: none; }
-  #suggestions li { padding: 8px 12px; cursor: pointer; }
-  #suggestions li small { color: var(--muted); }
-  #suggestions li:hover, #suggestions li.active { background: var(--bg); }
-  #list { list-style: none; margin: 0; padding: 0 8px; overflow-y: auto; flex: 1; }
-  #list li { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer; }
-  #list li:hover { background: var(--bg); }
-  #list .name { flex: 1; }
-  #list small { color: var(--muted); }
-  #list button { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 16px; }
-  #list button:hover { color: var(--danger); }
+  .suggestions:empty { display: none; }
+  .suggestions li { padding: 8px 12px; cursor: pointer; }
+  .suggestions li:hover, .suggestions li.active { background: var(--bg); }
+  small, .hint { color: var(--muted); }
+  .hint { font-size: 13px; margin: 4px 16px; }
+  .list { list-style: none; margin: 0; padding: 0 8px; overflow-y: auto; flex: 1; }
+  .list > li { border-radius: 6px; }
+  .list > li:hover { background: var(--bg); }
+  .row { display: flex; align-items: center; gap: 6px; padding: 8px; }
+  .row .name { flex: 1; cursor: pointer; }
+  .badge { font-size: 12px; padding: 1px 6px; border-radius: 10px; background: var(--bg);
+           border: 1px solid var(--border); color: var(--muted); }
+  .icon { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 15px;
+          text-decoration: none; padding: 2px 4px; }
+  .icon:hover { color: var(--accent); }
+  .icon.del:hover { color: var(--danger); }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .details { display: grid; gap: 6px; padding: 0 8px 10px; font-size: 13px; color: var(--muted); }
   .empty { color: var(--muted); padding: 16px; font-size: 14px; }
+  .btn { font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 8px; cursor: pointer;
+         border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .draft { padding: 4px 16px; display: grid; gap: 8px; }
+  .draft .two { display: grid; grid-template-columns: 1fr 90px; gap: 8px; }
+  .draft .search { padding: 0; }
+  .draft .suggestions { left: 0; right: 0; }
+  .draft ol { margin: 0; padding-left: 22px; }
+  .draft ol li { padding: 2px 0; }
+  .draft ol li .icon { font-size: 13px; }
+  .actions { display: flex; gap: 8px; }
+  .status { font-size: 13px; color: var(--muted); }
+  .new-trip { margin: 4px 16px 8px; }
   footer { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
-  footer button, footer label { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 6px;
-         border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+  footer .btn { font-size: 13px; padding: 6px 10px; }
   footer input { display: none; }
   #map { height: 100%; min-height: 0; }
+  .num { background: var(--accent); color: #fff; border-radius: 50%; width: 20px; height: 20px;
+         display: grid; place-items: center; font: 600 11px system-ui; border: 2px solid #fff; }
   @media (max-width: 720px) {
-    body { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; }
+    body { grid-template-columns: 1fr; grid-template-rows: 50vh 1fr; }
     #map { grid-row: 1; }
     aside { grid-row: 2; border-right: none; border-top: 1px solid var(--border); }
   }
@@ -61,155 +92,424 @@
     <h1>📍 Mes villes de France</h1>
     <div class="count" id="count"></div>
   </header>
-  <div class="search">
-    <input type="search" id="q" placeholder="Ajouter une ville (ex. Lyon)…" autocomplete="off">
-    <ul id="suggestions"></ul>
+  <div class="bar">
+    <div class="tabs">
+      <button data-tab="villes" class="on">Villes</button>
+      <button data-tab="trajets">Trajets</button>
+    </div>
+    <select id="filtre" title="Filtrer par année"></select>
   </div>
-  <ul id="list"></ul>
+
+  <section class="panel" id="panel-villes">
+    <div class="search">
+      <input type="search" id="q" placeholder="Ajouter une ville (ex. Lyon)…" autocomplete="off">
+      <ul class="suggestions" id="q-sugg"></ul>
+    </div>
+    <ul class="list" id="villes"></ul>
+  </section>
+
+  <section class="panel" id="panel-trajets" hidden>
+    <button class="btn new-trip" id="new-trip">＋ Nouveau trajet en train</button>
+    <div class="draft" id="draft" hidden>
+      <div class="two">
+        <input id="d-nom" placeholder="Nom (facultatif)">
+        <input id="d-annee" type="number" min="1900" max="2100" placeholder="Année">
+      </div>
+      <div class="search">
+        <input type="search" id="d-q" placeholder="Ajouter une étape…" autocomplete="off">
+        <ul class="suggestions" id="d-sugg"></ul>
+      </div>
+      <ol id="d-etapes"></ol>
+      <div class="hint" style="margin:0">Ajoute les villes dans l’ordre du trajet (ou clique sur la carte). L’itinéraire suit les voies ferrées.</div>
+      <div class="actions">
+        <button class="btn primary" id="d-save">Enregistrer</button>
+        <button class="btn" id="d-cancel">Annuler</button>
+      </div>
+      <div class="status" id="d-status"></div>
+    </div>
+    <ul class="list" id="trajets"></ul>
+  </section>
+
   <footer>
-    <button id="export">Exporter</button>
-    <label>Importer<input type="file" id="import" accept="application/json"></label>
-    <button id="clear">Tout effacer</button>
+    <button class="btn" id="export">Exporter</button>
+    <label class="btn">Importer<input type="file" id="import" accept="application/json"></label>
+    <button class="btn" id="clear">Tout effacer</button>
   </footer>
 </aside>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const STORAGE_KEY = 'villes-visitees';
-const API = 'https://geo.api.gouv.fr/communes';
+const KEY_VILLES = 'villes-visitees';
+const KEY_TRAJETS = 'trajets';
+const GEO_API = 'https://geo.api.gouv.fr/communes';
+const COLORS = ['#d7263d', '#1b998b', '#f46036', '#7b2cbf', '#0077b6', '#e09f3e', '#ff006e', '#2e7d32'];
 
-let cities = load();
-const markers = new Map();
+let villes = load(KEY_VILLES);
+let trajets = load(KEY_TRAJETS);
+let filtre = '';
+let tab = 'villes';
+let draft = null;   // trajet en cours d'édition
 
+// ---------- Carte ----------
 const map = L.map('map').setView([46.6, 2.4], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 18,
-  attribution: '&copy; contributeurs OpenStreetMap'
+  maxZoom: 18, attribution: '&copy; contributeurs OpenStreetMap'
 }).addTo(map);
+const rail = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
+  maxZoom: 18, opacity: 0.7, attribution: 'Voies : <a href="https://www.openrailwaymap.org/">OpenRailwayMap</a>'
+}).addTo(map);
+const trajetsLayer = L.layerGroup().addTo(map);
+const villesLayer = L.layerGroup().addTo(map);
+const draftLayer = L.layerGroup().addTo(map);
+L.control.layers(null, { 'Réseau ferré': rail, 'Trajets': trajetsLayer, 'Villes': villesLayer }).addTo(map);
 
-function load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
+// ---------- Utilitaires ----------
+function load(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; }
 }
 function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cities)); } catch {}
+  try {
+    localStorage.setItem(KEY_VILLES, JSON.stringify(villes));
+    localStorage.setItem(KEY_TRAJETS, JSON.stringify(trajets));
+  } catch { alert('Impossible de sauvegarder (stockage plein ?). Pense à exporter.'); }
 }
-
-function addCity(city) {
-  if (cities.some(c => c.code === city.code)) {
-    focusCity(city.code);
-    return;
-  }
-  cities.push(city);
-  save();
-  render();
-  focusCity(city.code);
-}
-function removeCity(code) {
-  cities = cities.filter(c => c.code !== code);
-  save();
-  render();
-}
-function focusCity(code) {
-  const m = markers.get(code);
-  if (m) { map.setView(m.getLatLng(), Math.max(map.getZoom(), 9)); m.openPopup(); }
-}
-
-function render() {
-  markers.forEach(m => m.remove());
-  markers.clear();
-  for (const c of cities) {
-    const m = L.marker([c.lat, c.lon]).addTo(map)
-      .bindPopup(`<b>${esc(c.nom)}</b><br>${esc(c.departement || '')}`);
-    markers.set(c.code, m);
-  }
-
-  const sorted = [...cities].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
-  const list = document.getElementById('list');
-  list.innerHTML = sorted.length ? '' : '<li class="empty">Aucune ville pour l’instant. Cherche une ville ci-dessus ou clique sur la carte.</li>';
-  for (const c of sorted) {
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="name">${esc(c.nom)} <small>${esc(c.departement || '')}</small></span><button title="Retirer">✕</button>`;
-    li.querySelector('.name').onclick = () => focusCity(c.code);
-    li.querySelector('button').onclick = () => removeCity(c.code);
-    list.appendChild(li);
-  }
-
-  const n = cities.length;
-  const deps = new Set(cities.map(c => c.departement).filter(Boolean)).size;
-  document.getElementById('count').textContent =
-    `${n} ville${n > 1 ? 's' : ''} · ${deps} département${deps > 1 ? 's' : ''}`;
-}
-
 function esc(s) {
-  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
-
-function toCity(c) {
+function safeUrl(u) { return /^https:\/\//i.test(u || '') ? u : ''; }
+function visible(x) { return !filtre || String(x.annee || '') === filtre; }
+function distKm(a, b) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (b[0] - a[0]) * rad, dLon = (b[1] - a[1]) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function toCommune(c) {
   return {
-    code: c.code,
-    nom: c.nom,
+    code: c.code, nom: c.nom,
     departement: c.departement ? `${c.departement.nom} (${c.departement.code})` : '',
-    lat: c.centre.coordinates[1],
-    lon: c.centre.coordinates[0]
+    lat: c.centre.coordinates[1], lon: c.centre.coordinates[0]
   };
 }
+async function searchCommunes(term) {
+  const res = await fetch(`${GEO_API}?nom=${encodeURIComponent(term)}&fields=nom,code,centre,departement&boost=population&limit=8`);
+  return (await res.json()).filter(c => c.centre).map(toCommune);
+}
+async function communeAt(lat, lon) {
+  const res = await fetch(`${GEO_API}?lat=${lat}&lon=${lon}&fields=nom,code,centre,departement`);
+  const [c] = await res.json();
+  return c && c.centre ? toCommune(c) : null;
+}
 
-// Recherche avec autocomplétion
-const q = document.getElementById('q');
-const sugg = document.getElementById('suggestions');
-let results = [], active = -1, timer;
-
-q.addEventListener('input', () => {
-  clearTimeout(timer);
-  const term = q.value.trim();
-  if (term.length < 2) { sugg.innerHTML = ''; results = []; return; }
-  timer = setTimeout(async () => {
-    try {
-      const res = await fetch(`${API}?nom=${encodeURIComponent(term)}&fields=nom,code,centre,departement,population&boost=population&limit=8`);
-      results = (await res.json()).filter(c => c.centre).map(toCity);
-    } catch { results = []; }
-    active = -1;
-    showSuggestions();
-  }, 200);
-});
-q.addEventListener('keydown', e => {
-  if (!results.length) return;
-  if (e.key === 'ArrowDown') { active = (active + 1) % results.length; showSuggestions(); e.preventDefault(); }
-  else if (e.key === 'ArrowUp') { active = (active - 1 + results.length) % results.length; showSuggestions(); e.preventDefault(); }
-  else if (e.key === 'Enter') { pick(results[Math.max(active, 0)]); }
-  else if (e.key === 'Escape') { sugg.innerHTML = ''; }
-});
-function showSuggestions() {
-  sugg.innerHTML = '';
-  results.forEach((c, i) => {
-    const li = document.createElement('li');
-    if (i === active) li.className = 'active';
-    li.innerHTML = `${esc(c.nom)} <small>${esc(c.departement)}</small>`;
-    li.onmousedown = e => { e.preventDefault(); pick(c); };
-    sugg.appendChild(li);
+// Champ de recherche avec autocomplétion, réutilisé pour les villes et les étapes
+function attachSearch(input, ul, onPick) {
+  let results = [], active = -1, timer;
+  const show = () => {
+    ul.innerHTML = '';
+    results.forEach((c, i) => {
+      const li = document.createElement('li');
+      if (i === active) li.className = 'active';
+      li.innerHTML = `${esc(c.nom)} <small>${esc(c.departement)}</small>`;
+      li.onmousedown = e => { e.preventDefault(); pick(c); };
+      ul.appendChild(li);
+    });
+  };
+  const pick = c => { onPick(c); input.value = ''; results = []; show(); };
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const term = input.value.trim();
+    if (term.length < 2) { results = []; show(); return; }
+    timer = setTimeout(async () => {
+      try { results = await searchCommunes(term); } catch { results = []; }
+      active = -1; show();
+    }, 200);
   });
-}
-function pick(c) {
-  addCity(c);
-  q.value = '';
-  sugg.innerHTML = '';
-  results = [];
+  input.addEventListener('keydown', e => {
+    if (!results.length) return;
+    if (e.key === 'ArrowDown') { active = (active + 1) % results.length; show(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { active = (active - 1 + results.length) % results.length; show(); e.preventDefault(); }
+    else if (e.key === 'Enter') pick(results[Math.max(active, 0)]);
+    else if (e.key === 'Escape') { results = []; show(); }
+  });
+  input.addEventListener('blur', () => setTimeout(() => { results = []; show(); }, 150));
 }
 
-// Clic sur la carte : ajoute la commune à cet endroit
-map.on('click', async e => {
+// ---------- Itinéraire ferroviaire ----------
+// BRouter (profil "rail") calcule un trajet le long des voies OSM.
+// En cas d'échec, on retombe sur une ligne droite (affichée en pointillés).
+async function routeRail(a, b) {
   try {
-    const res = await fetch(`${API}?lat=${e.latlng.lat}&lon=${e.latlng.lng}&fields=nom,code,centre,departement`);
-    const [c] = await res.json();
-    if (c && c.centre) addCity(toCity(c));
-  } catch {}
+    const url = `https://brouter.de/brouter?lonlats=${a.lon},${a.lat}|${b.lon},${b.lat}&profile=rail&alternativeidx=0&format=geojson`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
+    const f = (await res.json()).features[0];
+    const pts = f.geometry.coordinates.map(([lon, lat]) => [+lat.toFixed(5), +lon.toFixed(5)]);
+    return { coords: simplify(pts), rail: true, km: Math.round(f.properties['track-length'] / 1000) };
+  } catch {
+    const coords = [[a.lat, a.lon], [b.lat, b.lon]];
+    return { coords, rail: false, km: Math.round(distKm(coords[0], coords[1])) };
+  }
+}
+// Garde un point tous les ~150 m pour limiter la place prise dans le navigateur
+function simplify(pts) {
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length - 1; i++) {
+    if (distKm(out[out.length - 1], pts[i]) >= 0.15) out.push(pts[i]);
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+
+// ---------- Rendu ----------
+function render() {
+  renderFiltre();
+  renderMap();
+  renderVilles();
+  renderTrajets();
+  renderDraft();
+  renderCount();
+}
+
+function renderCount() {
+  const v = villes.filter(visible), t = trajets.filter(visible);
+  const deps = new Set(v.map(c => c.departement).filter(Boolean)).size;
+  const km = t.reduce((s, x) => s + (x.km || 0), 0);
+  const p = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
+  document.getElementById('count').textContent =
+    `${p(v.length, 'ville')} · ${p(deps, 'département')} · ${p(t.length, 'trajet')}${km ? ` (${km.toLocaleString('fr')} km)` : ''}` +
+    (filtre ? ` en ${filtre}` : '');
+}
+
+function renderFiltre() {
+  const years = [...new Set([...villes, ...trajets].map(x => x.annee).filter(Boolean).map(String))].sort().reverse();
+  if (filtre && !years.includes(filtre)) filtre = '';
+  const sel = document.getElementById('filtre');
+  sel.innerHTML = `<option value="">Toutes les années</option>` +
+    years.map(y => `<option${y === filtre ? ' selected' : ''}>${y}</option>`).join('');
+}
+
+function villePopup(c) {
+  const photos = safeUrl(c.photos);
+  return `<b>${esc(c.nom)}</b><br><small>${esc(c.departement)}</small>` +
+    (c.annee ? `<br>Visitée en ${esc(c.annee)}` : '') +
+    (c.note ? `<br><i>${esc(c.note)}</i>` : '') +
+    (photos ? `<br><a href="${esc(photos)}" target="_blank" rel="noopener">📷 Voir les photos</a>` : '');
+}
+
+function trajetLabel(t) {
+  return t.nom || t.etapes.map(e => e.nom).join(' → ');
+}
+
+function renderMap() {
+  villesLayer.clearLayers();
+  trajetsLayer.clearLayers();
+  for (const t of trajets.filter(visible)) {
+    const popup = `<b>${esc(trajetLabel(t))}</b>` + (t.annee ? `<br>${esc(t.annee)}` : '') +
+      `<br>${t.etapes.map(e => esc(e.nom)).join(' → ')}<br>${t.km} km`;
+    for (const s of t.segments || []) {
+      L.polyline(s.coords, { color: t.couleur, weight: 4, opacity: .85, dashArray: s.rail ? null : '6 8' })
+        .bindPopup(popup).addTo(trajetsLayer);
+    }
+  }
+  for (const c of villes.filter(visible)) {
+    L.circleMarker([c.lat, c.lon], { radius: 7, color: '#fff', weight: 2, fillColor: '#2a5bd7', fillOpacity: 1 })
+      .bindPopup(villePopup(c)).addTo(villesLayer);
+  }
+}
+
+function villeRow(c) {
+  const photos = safeUrl(c.photos);
+  return `<span class="name" data-act="focus">${esc(c.nom)} <small>${esc(c.departement)}</small></span>` +
+    (c.annee ? `<span class="badge">${esc(c.annee)}</span>` : '') +
+    (photos ? `<a class="icon" href="${esc(photos)}" target="_blank" rel="noopener" title="Photos">📷</a>` : '') +
+    `<button class="icon" data-act="edit" title="Infos">✎</button>` +
+    `<button class="icon del" data-act="del" title="Retirer">✕</button>`;
+}
+
+let editing = null;   // code de la ville dont le formulaire est ouvert
+function renderVilles() {
+  const list = document.getElementById('villes');
+  const shown = villes.filter(visible).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  if (!shown.length) {
+    list.innerHTML = `<li class="empty">${villes.length ? 'Aucune ville pour cette année.' : 'Aucune ville pour l’instant. Cherche une ville ci-dessus ou clique sur la carte.'}</li>`;
+    return;
+  }
+  list.innerHTML = shown.map(c => `
+    <li data-code="${esc(c.code)}">
+      <div class="row">${villeRow(c)}</div>
+      <form class="details"${editing === c.code ? '' : ' hidden'} onsubmit="return false">
+        <label>Année de visite <input name="annee" type="number" min="1900" max="2100" value="${esc(c.annee)}"></label>
+        <label>Lien de l’album Google Photos <input name="photos" type="url" placeholder="https://photos.app.goo.gl/…" value="${esc(c.photos)}"></label>
+        <label>Note <textarea name="note" rows="2">${esc(c.note)}</textarea></label>
+      </form>
+    </li>`).join('');
+}
+
+document.getElementById('villes').addEventListener('click', e => {
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  const li = e.target.closest('li[data-code]');
+  if (!act || !li) return;
+  const c = villes.find(v => v.code === li.dataset.code);
+  if (act === 'focus') {
+    map.setView([c.lat, c.lon], Math.max(map.getZoom(), 9));
+    villesLayer.eachLayer(m => { const p = m.getLatLng(); if (p.lat === c.lat && p.lng === c.lon) m.openPopup(); });
+  } else if (act === 'edit') {
+    const form = li.querySelector('form');
+    form.hidden = !form.hidden;
+    editing = form.hidden ? null : c.code;
+    if (!form.hidden) form.annee.focus();
+  } else if (act === 'del') {
+    if (confirm(`Retirer ${c.nom} ?`)) { villes = villes.filter(v => v !== c); save(); render(); }
+  }
+});
+document.getElementById('villes').addEventListener('change', e => {
+  const li = e.target.closest('li[data-code]');
+  const c = villes.find(v => v.code === li.dataset.code);
+  const v = e.target.value.trim();
+  if (e.target.name === 'photos' && v && !safeUrl(v)) { alert('Le lien doit commencer par https://'); return; }
+  if (v) c[e.target.name] = e.target.name === 'annee' ? +v : v; else delete c[e.target.name];
+  save();
+  li.querySelector('.row').innerHTML = villeRow(c);
+  renderFiltre(); renderMap(); renderCount();
 });
 
-// Export / import / effacer
+function addVille(c) {
+  const existing = villes.find(v => v.code === c.code);
+  if (!existing) {
+    if (filtre) c.annee = +filtre;
+    villes.push(c);
+    save();
+    render();
+  }
+  map.setView([c.lat, c.lon], Math.max(map.getZoom(), 8));
+}
+
+function renderTrajets() {
+  const list = document.getElementById('trajets');
+  const shown = trajets.filter(visible);
+  if (!shown.length) {
+    list.innerHTML = draft ? '' : `<li class="empty">${trajets.length ? 'Aucun trajet pour cette année.' : 'Aucun trajet pour l’instant.'}</li>`;
+    return;
+  }
+  list.innerHTML = shown.map(t => `
+    <li data-id="${esc(t.id)}"><div class="row">
+      <span class="swatch" style="background:${esc(t.couleur)}"></span>
+      <span class="name" data-act="focus">${esc(trajetLabel(t))}<br>
+        <small>${t.annee ? esc(t.annee) + ' · ' : ''}${t.etapes.length} étapes · ${t.km} km</small></span>
+      <button class="icon" data-act="edit" title="Modifier">✎</button>
+      <button class="icon del" data-act="del" title="Supprimer">✕</button>
+    </div></li>`).join('');
+}
+
+document.getElementById('trajets').addEventListener('click', e => {
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  const li = e.target.closest('li[data-id]');
+  if (!act || !li) return;
+  const t = trajets.find(x => x.id === li.dataset.id);
+  if (act === 'focus') {
+    map.fitBounds(L.latLngBounds(t.segments.flatMap(s => s.coords)), { padding: [30, 30] });
+  } else if (act === 'edit') {
+    draft = structuredClone(t);
+    render();
+  } else if (act === 'del') {
+    if (confirm(`Supprimer « ${trajetLabel(t)} » ?`)) { trajets = trajets.filter(x => x !== t); save(); render(); }
+  }
+});
+
+// ---------- Édition d'un trajet ----------
+function renderDraft() {
+  document.getElementById('draft').hidden = !draft;
+  document.getElementById('new-trip').hidden = !!draft;
+  draftLayer.clearLayers();
+  if (!draft) return;
+  document.getElementById('d-nom').value = draft.nom || '';
+  document.getElementById('d-annee').value = draft.annee || '';
+  document.getElementById('d-etapes').innerHTML = draft.etapes.map((e, i) => `
+    <li data-i="${i}">${esc(e.nom)}
+      ${i ? `<button class="icon" data-act="up" title="Monter">↑</button>` : ''}
+      <button class="icon del" data-act="del" title="Retirer">✕</button></li>`).join('');
+  const pts = draft.etapes.map(e => [e.lat, e.lon]);
+  if (pts.length > 1) L.polyline(pts, { color: '#2a5bd7', weight: 3, dashArray: '4 6' }).addTo(draftLayer);
+  pts.forEach((p, i) => L.marker(p, {
+    icon: L.divIcon({ className: '', html: `<div class="num">${i + 1}</div>`, iconSize: [20, 20], iconAnchor: [10, 10] })
+  }).addTo(draftLayer));
+}
+
+function addEtape(c) {
+  draft.etapes.push(c);
+  renderDraft();
+}
+
+document.getElementById('new-trip').onclick = () => {
+  draft = { id: null, nom: '', annee: filtre ? +filtre : '', etapes: [] };
+  render();
+  document.getElementById('d-q').focus();
+};
+document.getElementById('d-nom').oninput = e => { draft.nom = e.target.value.trim(); };
+document.getElementById('d-annee').oninput = e => { draft.annee = e.target.value ? +e.target.value : ''; };
+document.getElementById('d-etapes').addEventListener('click', e => {
+  const act = e.target.dataset.act;
+  const i = +e.target.closest('li')?.dataset.i;
+  if (act === 'del') draft.etapes.splice(i, 1);
+  else if (act === 'up') [draft.etapes[i - 1], draft.etapes[i]] = [draft.etapes[i], draft.etapes[i - 1]];
+  else return;
+  renderDraft();
+});
+document.getElementById('d-cancel').onclick = () => { draft = null; document.getElementById('d-status').textContent = ''; render(); };
+document.getElementById('d-save').onclick = async () => {
+  if (draft.etapes.length < 2) { alert('Ajoute au moins deux étapes.'); return; }
+  const btns = [document.getElementById('d-save'), document.getElementById('d-cancel')];
+  const status = document.getElementById('d-status');
+  btns.forEach(b => b.disabled = true);
+  const segments = [];
+  for (let i = 1; i < draft.etapes.length; i++) {
+    status.textContent = `Calcul de l’itinéraire ferroviaire… (${i}/${draft.etapes.length - 1})`;
+    segments.push(await routeRail(draft.etapes[i - 1], draft.etapes[i]));
+  }
+  btns.forEach(b => b.disabled = false);
+  const approx = segments.some(s => !s.rail);
+  status.textContent = approx ? 'Certaines portions n’ont pas pu suivre les voies : elles sont tracées en pointillés.' : '';
+
+  const t = {
+    ...draft,
+    id: draft.id || String(Date.now()),
+    couleur: draft.couleur || COLORS[trajets.length % COLORS.length],
+    segments,
+    km: segments.reduce((s, x) => s + x.km, 0)
+  };
+  if (!t.nom) delete t.nom;
+  if (!t.annee) delete t.annee;
+  const idx = trajets.findIndex(x => x.id === t.id);
+  if (idx >= 0) trajets[idx] = t; else trajets.push(t);
+  draft = null;
+  save();
+  render();
+  map.fitBounds(L.latLngBounds(segments.flatMap(s => s.coords)), { padding: [30, 30] });
+};
+
+// ---------- Interactions générales ----------
+attachSearch(document.getElementById('q'), document.getElementById('q-sugg'), addVille);
+attachSearch(document.getElementById('d-q'), document.getElementById('d-sugg'), addEtape);
+
+map.on('click', async e => {
+  if (tab === 'trajets' && !draft) return;
+  let c;
+  try { c = await communeAt(e.latlng.lat, e.latlng.lng); } catch { return; }
+  if (!c) return;
+  if (tab === 'trajets') addEtape(c); else addVille(c);
+});
+
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.getElementById('panel-villes').hidden = tab !== 'villes';
+  document.getElementById('panel-trajets').hidden = tab !== 'trajets';
+});
+document.getElementById('filtre').onchange = e => { filtre = e.target.value; render(); };
+
 document.getElementById('export').onclick = () => {
-  const blob = new Blob([JSON.stringify(cities, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ villes, trajets }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'mes-villes.json';
@@ -221,14 +521,18 @@ document.getElementById('import').onchange = async e => {
   if (!file) return;
   try {
     const data = JSON.parse(await file.text());
-    for (const c of data) if (c.code && !cities.some(x => x.code === c.code)) cities.push(c);
+    const v = Array.isArray(data) ? data : data.villes || [];   // l'ancien format était une simple liste de villes
+    for (const c of v) if (c.code && !villes.some(x => x.code === c.code)) villes.push(c);
+    for (const t of data.trajets || []) if (t.id && !trajets.some(x => x.id === t.id)) trajets.push(t);
     save();
     render();
   } catch { alert('Fichier invalide'); }
   e.target.value = '';
 };
 document.getElementById('clear').onclick = () => {
-  if (cities.length && confirm('Effacer toutes les villes ?')) { cities = []; save(); render(); }
+  if ((villes.length || trajets.length) && confirm('Effacer toutes les villes et tous les trajets ?')) {
+    villes = []; trajets = []; draft = null; save(); render();
+  }
 };
 
 render();
