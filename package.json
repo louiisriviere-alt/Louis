@@ -1,0 +1,10 @@
+{
+  "name": "mes-villes-de-france",
+  "private": true,
+  "scripts": {
+    "construire": "node outils/construire.mjs"
+  },
+  "devDependencies": {
+    "leaflet": "1.9.4"
+  }
+}

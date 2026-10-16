@@ -1,0 +1,750 @@
+<title>Mes villes de France</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/*LEAFLET_CSS*/
+</style>
+<style>
+  /* Mise en page : carte plein cadre + carnet latéral (en dessous sur téléphone). */
+  :root {
+    --sea: #dde5ec; --land: #f8f9f7; --border: #c3ccd5; --rail: #7d8996;
+    --bg: #ffffff; --surface: #f1f4f6; --ink: #1c2430; --muted: #5b6878;
+    --accent: #c8344f; --accent-ink: #ffffff; --accent-soft: #f2c6ce;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sea: #0e151d; --land: #1a232e; --border: #2e3a48; --rail: #66768a;
+      --bg: #131a23; --surface: #1c2531; --ink: #e5eaf0; --muted: #95a3b4;
+      --accent: #ff6f86; --accent-ink: #1a0a0e; --accent-soft: #5b2633; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sea: #0e151d; --land: #1a232e; --border: #2e3a48; --rail: #66768a;
+    --bg: #131a23; --surface: #1c2531; --ink: #e5eaf0; --muted: #95a3b4;
+    --accent: #ff6f86; --accent-ink: #1a0a0e; --accent-soft: #5b2633; color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg); color: var(--ink); font: 15px/1.45 var(--body);
+    display: grid; grid-template-columns: 380px 1fr; overflow: hidden;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Carnet ---------- */
+  aside {
+    display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .inner { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: 16px; }
+  header { padding-block: 18px 10px; display: grid; gap: 6px; }
+  h1 { font: 800 24px/1.1 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+  .stats { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 13px; }
+  .stats b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .readonly { font-size: 13px; color: var(--muted); }
+
+  .bar { display: flex; gap: 8px; align-items: center; padding-block: 6px 10px; }
+  .tabs { display: flex; flex: 1; background: var(--surface); border-radius: 10px; padding: 3px; gap: 3px; }
+  .tabs button {
+    flex: 1; border: 0; background: none; padding: 7px 8px; border-radius: 8px; cursor: pointer;
+    font-weight: 500; color: var(--muted);
+  }
+  .tabs button[aria-selected="true"] { background: var(--bg); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
+  select {
+    background: var(--surface); border: 0; border-radius: 10px; padding: 9px 8px; cursor: pointer;
+    font-size: 14px; max-width: 46%;
+  }
+
+  .panel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .search { padding-block: 2px 8px; }
+  .field {
+    width: 100%; background: var(--surface); border: 1px solid transparent; border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .field:focus { outline: none; border-color: var(--accent); }
+  .suggestions {
+    list-style: none; margin: 6px 0 0; padding: 4px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 22px rgb(0 0 0 / .14);
+  }
+  .suggestions:empty { display: none; }
+  .suggestions li { padding: 8px 10px; border-radius: 7px; cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+  .suggestions li.active, .suggestions li:hover { background: var(--surface); }
+  .suggestions small, .muted { color: var(--muted); }
+
+  .list { list-style: none; margin: 0; padding-block: 0 12px; }
+  .list > li { border-bottom: 1px solid var(--border); }
+  .list > li:last-child { border-bottom: 0; }
+  .row { display: flex; align-items: center; gap: 6px; padding-block: 10px; min-width: 0; }
+  .row .name { flex: 1; min-width: 0; cursor: pointer; background: none; border: 0; padding: 0; text-align: left; }
+  .row .name strong { font-weight: 600; }
+  .row .name small { color: var(--muted); display: block; font-size: 12.5px; }
+  .year {
+    font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 2px 7px; border-radius: 99px;
+    background: var(--accent-soft); color: var(--ink);
+  }
+  .icon {
+    border: 0; background: none; color: var(--muted); cursor: pointer; padding: 6px; border-radius: 8px;
+    font-size: 15px; line-height: 1; text-decoration: none; white-space: nowrap;
+  }
+  .icon:hover { background: var(--surface); color: var(--ink); }
+  .icon.armed { color: var(--accent-ink); background: var(--accent); font-size: 12.5px; font-weight: 600; }
+  .swatch { width: 14px; height: 4px; border-radius: 2px; flex: none; }
+
+  .details { display: grid; gap: 8px; padding-block: 0 12px; }
+  .details label { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
+  .details .field { padding: 8px 10px; font-size: 14px; color: var(--ink); }
+
+  .empty { padding-block: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 6px; max-width: 34ch; }
+  .empty strong { color: var(--ink); font-weight: 600; }
+
+  .btn {
+    border: 1px solid var(--border); background: var(--bg); padding: 8px 12px; border-radius: 10px;
+    cursor: pointer; font-weight: 500; font-size: 14px;
+  }
+  .btn:hover { background: var(--surface); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.armed { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  .new-trip { margin-block: 2px 8px; width: 100%; }
+  .draft { display: grid; gap: 8px; padding-block: 2px 12px; border-bottom: 1px solid var(--border); }
+  .draft .two { display: grid; grid-template-columns: 1fr 96px; gap: 8px; }
+  .draft .search { padding: 0; }
+  .stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s; }
+  .stops li { display: flex; align-items: center; gap: 8px; counter-increment: s; }
+  .stops li::before {
+    content: counter(s); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--ink); color: var(--bg); font-size: 11px; font-weight: 600; flex: none;
+  }
+  .stops li span { flex: 1; min-width: 0; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  footer {
+    display: flex; gap: 8px; flex-wrap: wrap; padding-block: 10px; border-top: 1px solid var(--border);
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  }
+  footer .btn { font-size: 13px; padding: 6px 10px; }
+  footer input { display: none; }
+
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 14px;
+    z-index: 2000; max-width: calc(100% - 32px);
+  }
+
+  /* ---------- Carte ---------- */
+  #map { height: 100%; min-height: 0; background: var(--sea); }
+  .leaflet-container { font-family: var(--body); background: var(--sea); }
+  .dep { fill: var(--land); fill-opacity: 1; stroke: var(--border); stroke-width: 0.8; }
+  .dep.visited { fill: var(--accent-soft); }
+  .rail-net { stroke: var(--rail); stroke-width: 1.1; fill: none; stroke-opacity: .75; }
+  .pin { fill: var(--accent); fill-opacity: 1; stroke: var(--land); stroke-width: 2; }
+  .draft-line { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 3 6; fill: none; }
+  .stop-num {
+    width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--ink); color: var(--bg); font: 600 11px var(--body); border: 2px solid var(--land);
+  }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--bg); color: var(--ink); }
+  .leaflet-popup-content { margin: 12px 14px; font-size: 14px; line-height: 1.45; }
+  .leaflet-popup-content strong { font-family: var(--display); font-size: 16px; }
+  .leaflet-popup-content a { color: var(--accent); font-weight: 600; }
+  .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+  .leaflet-bar a, .leaflet-bar button { background: var(--bg); color: var(--ink); border-color: var(--border); }
+  .leaflet-bar a:hover, .leaflet-bar button:hover { background: var(--surface); }
+  .leaflet-control-attribution { background: color-mix(in srgb, var(--bg) 80%, transparent) !important; color: var(--muted); }
+  .leaflet-control-attribution a { color: var(--muted); }
+  .rail-toggle {
+    border: 0; padding: 0 10px; height: 30px; cursor: pointer; font: 500 13px var(--body);
+    border-radius: 4px; display: flex; align-items: center; gap: 6px;
+  }
+  .rail-toggle[aria-pressed="false"] { color: var(--muted); }
+
+  @media (max-width: 760px) {
+    body { grid-template-columns: 1fr; grid-template-rows: 46% 1fr; }
+    #map { grid-row: 1; }
+    aside { grid-row: 2; border-right: 0; border-top: 1px solid var(--border); }
+    .inner { padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+    header { padding-block: 12px 6px; }
+    h1 { font-size: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .leaflet-zoom-anim .leaflet-zoom-animated { transition: none !important; } }
+</style>
+
+<aside>
+  <header class="inner">
+    <h1>Mes villes de France</h1>
+    <div class="stats" id="stats"></div>
+    <div class="readonly" id="readonly" hidden>Carnet en lecture seule.</div>
+  </header>
+  <div class="bar inner">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-villes" data-tab="villes" aria-selected="true">Villes</button>
+      <button role="tab" id="tab-trajets" data-tab="trajets" aria-selected="false">Trajets</button>
+    </div>
+    <select id="filtre" aria-label="Filtrer par année"></select>
+  </div>
+
+  <section class="panel" id="panel-villes">
+    <div class="search inner edit-only">
+      <input class="field" type="search" id="q" placeholder="Ajouter une ville : Lyon, Saint-Malo…" autocomplete="off" aria-label="Ajouter une ville">
+      <ul class="suggestions" id="q-sugg"></ul>
+    </div>
+    <ul class="list inner" id="villes"></ul>
+  </section>
+
+  <section class="panel" id="panel-trajets" hidden>
+    <div class="inner edit-only">
+      <button class="btn new-trip" id="new-trip">+ Nouveau trajet</button>
+    </div>
+    <div class="draft inner" id="draft" hidden>
+      <div class="two">
+        <input class="field" id="d-nom" placeholder="Nom (facultatif)" aria-label="Nom du trajet">
+        <input class="field" id="d-annee" type="number" inputmode="numeric" min="1900" max="2100" placeholder="Année" aria-label="Année du trajet">
+      </div>
+      <div class="search">
+        <input class="field" type="search" id="d-q" placeholder="Ajouter une étape…" autocomplete="off" aria-label="Ajouter une étape">
+        <ul class="suggestions" id="d-sugg"></ul>
+      </div>
+      <ol class="stops" id="d-etapes"></ol>
+      <p class="hint" id="d-hint">Ajoute les villes dans l’ordre du voyage, ou touche la carte. Le tracé suit les voies ferrées.</p>
+      <div class="actions">
+        <button class="btn primary" id="d-save">Enregistrer le trajet</button>
+        <button class="btn" id="d-cancel">Annuler</button>
+      </div>
+    </div>
+    <ul class="list inner" id="trajets"></ul>
+  </section>
+
+  <footer class="inner">
+    <button class="btn" id="export">Exporter</button>
+    <label class="btn edit-only">Importer<input type="file" id="import" accept="application/json,.json"></label>
+    <button class="btn edit-only" id="clear">Tout effacer</button>
+  </footer>
+</aside>
+<div id="map"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!--DATA-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ======================================================================
+// Données intégrées : communes (INSEE), contours des départements,
+// réseau ferré (Natural Earth). Aucune requête réseau n'est nécessaire.
+// ======================================================================
+const COMM = COMMUNES.split('\n').map(l => {
+  const [code, nom, dep, lat, lon, pop] = l.split('|');
+  return { code, nom, dep, lat: +lat, lon: +lon, pop: +pop };
+});
+const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  .replace(/[-'’]/g, ' ').replace(/\bst\b/g, 'saint').replace(/\bste\b/g, 'sainte').replace(/\s+/g, ' ').trim();
+const KEYS = COMM.map(c => norm(c.nom));
+const depLabel = code => `${DEP_NOMS[code] || ''} (${code})`;
+const PALETTE = ['#d1495b', '#00798c', '#e09f3e', '#6a4c93', '#3a7ca5', '#e07a5f', '#3d9970', '#b5179e'];
+
+function searchCommunes(q) {
+  q = norm(q);
+  if (q.length < 2) return [];
+  const starts = [], inside = [];
+  for (let i = 0; i < COMM.length && starts.length < 8; i++) {
+    if (KEYS[i].startsWith(q)) starts.push(COMM[i]);
+    else if (inside.length < 8 && KEYS[i].includes(' ' + q)) inside.push(COMM[i]);
+  }
+  return [...starts, ...inside].slice(0, 8);
+}
+function communeAt(lat, lon) {
+  const c = Math.cos(lat * Math.PI / 180);
+  let best = null, bd = Infinity;
+  for (const x of COMM) {
+    const d = (x.lat - lat) ** 2 + ((x.lon - lon) * c) ** 2;
+    if (d < bd) { bd = d; best = x; }
+  }
+  return best;
+}
+function distKm(a, b) {
+  const r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+
+/*RAIL_JS*/
+const RAILG = buildRail(RAIL);
+const routeCache = new Map();
+function segment(a, b) {
+  const k = a.code + '>' + b.code;
+  if (!routeCache.has(k)) {
+    const r = RAILG.route(a, b);
+    routeCache.set(k, r ? { ...r, rail: true }
+      : { coords: [[a.lat, a.lon], [b.lat, b.lon]], km: Math.round(distKm(a, b)), rail: false });
+  }
+  return routeCache.get(k);
+}
+function trajetGeo(t) {
+  const segs = [];
+  for (let i = 1; i < t.etapes.length; i++) segs.push(segment(t.etapes[i - 1], t.etapes[i]));
+  return { segs, km: segs.reduce((s, x) => s + x.km, 0) };
+}
+
+// ======================================================================
+// État et sauvegarde
+// ======================================================================
+let villes = [], trajets = [];
+let filtre = '', tab = 'villes', draft = null, editing = null;
+let canWrite = true, ready = false;
+const store = { db: null, downloads: null, pending: {}, busy: {} };
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const safeUrl = u => /^https:\/\/[^\s]+$/i.test(u || '') ? u : '';
+const visible = x => !filtre || String(x.annee || '') === filtre;
+const $ = s => document.querySelector(s);
+
+function loadLocal() {
+  try {
+    villes = JSON.parse(localStorage.getItem('villes-visitees')) || [];
+    trajets = JSON.parse(localStorage.getItem('trajets-train')) || [];
+  } catch { villes = []; trajets = []; }
+}
+function saveLocal() {
+  try {
+    localStorage.setItem('villes-visitees', JSON.stringify(villes));
+    localStorage.setItem('trajets-train', JSON.stringify(trajets));
+  } catch {}
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 3500);
+}
+
+// Une écriture à la fois par document ; les changements rapprochés sont regroupés.
+function persist(...names) {
+  saveLocal();
+  if (!store.db) return;
+  for (const name of names) {
+    store.pending[name] = true;
+    if (!store.busy[name]) flush(name);
+  }
+}
+async function flush(name) {
+  store.busy[name] = true;
+  while (store.pending[name]) {
+    store.pending[name] = false;
+    const items = JSON.parse(JSON.stringify(name === 'villes' ? villes : trajets));
+    try {
+      await store.db.doc('carnet/' + name).set({ items });
+    } catch (e) {
+      if (e?.code === 'invalid_argument') { canWrite = false; render(); toast('Ce carnet est en lecture seule pour toi.'); }
+      else if (e?.code === 'quota_exceeded') toast('Le carnet est plein : retire quelques villes pour continuer.');
+      else toast('Enregistrement impossible pour l’instant. Réessaie dans un moment.');
+      break;
+    }
+  }
+  store.busy[name] = false;
+}
+
+async function initStore() {
+  let db = null, user = null;
+  try {
+    if (window.claude?.use) {
+      [db, user, store.downloads] = await Promise.all([
+        claude.use('db'), claude.use('user'), claude.use('downloads')
+      ]);
+    }
+  } catch {}
+  if (!db) { loadLocal(); ready = true; render(); return; }
+  store.db = db;
+  if (user) {
+    try { if ((await user.canEdit()) === false) canWrite = false; } catch {}
+  }
+  const seen = new Set();
+  for (const name of ['villes', 'trajets']) {
+    db.doc('carnet/' + name).onSnapshot(snap => {
+      const items = snap.exists ? structuredClone(snap.data().items || []) : [];
+      const cur = name === 'villes' ? villes : trajets;
+      seen.add(name);
+      const first = !ready && seen.size === 2;
+      if (first) ready = true;
+      if (!first && JSON.stringify(items) === JSON.stringify(cur)) return;   // écho de notre propre écriture
+      if (name === 'villes') villes = items; else trajets = items;
+      if (ready) render();
+    }, () => toast('La synchronisation est interrompue. Recharge la page.'));
+  }
+}
+
+// ======================================================================
+// Carte
+// ======================================================================
+const FRANCE = [[41.3, -5.2], [51.1, 9.6]];
+const map = L.map('map', { zoomSnap: 0.25, minZoom: 4.5, maxZoom: 13, maxBounds: [[38, -10], [54, 14]] }).fitBounds(FRANCE);
+map.attributionControl.setPrefix(false).addAttribution('Contours : France GeoJSON · Voies : Natural Earth');
+
+const depLayers = new Map();
+L.geoJSON(DEPS, {
+  style: () => ({ className: 'dep' }),
+  interactive: false,
+  onEachFeature: (f, l) => depLayers.set(f.properties.code, l)
+}).addTo(map);
+
+const N = RAIL.n;
+const railLines = RAIL.l.map(l => l.map(i => [N[2 * i] / 1e4, N[2 * i + 1] / 1e4]));
+const railLayer = L.polyline(railLines, { className: 'rail-net', interactive: false, smoothFactor: 1.5 }).addTo(map);
+
+const RailToggle = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd() {
+    const box = L.DomUtil.create('div', 'leaflet-bar');
+    const b = L.DomUtil.create('button', 'rail-toggle', box);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', 'true');
+    b.textContent = 'Voies ferrées';
+    L.DomEvent.disableClickPropagation(box);
+    b.onclick = () => {
+      const on = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(on));
+      if (on) railLayer.addTo(map).bringToBack(); else railLayer.remove();
+      depLayers.forEach(l => l.bringToBack());
+    };
+    return box;
+  }
+});
+map.addControl(new RailToggle());
+
+const tripLayer = L.layerGroup().addTo(map);
+const pinLayer = L.layerGroup().addTo(map);
+const draftLayer = L.layerGroup().addTo(map);
+const pins = new Map();
+
+function villePopup(c) {
+  const photos = safeUrl(c.photos);
+  return `<strong>${esc(c.nom)}</strong><br><span class="muted">${esc(depLabel(c.dep))}</span>` +
+    (c.annee ? `<br>Visitée en ${esc(c.annee)}` : '') +
+    (c.note ? `<br><em>${esc(c.note)}</em>` : '') +
+    (photos ? `<br><a href="${esc(photos)}" target="_blank" rel="noopener">Voir les photos ↗</a>` : '');
+}
+const trajetLabel = t => t.nom || t.etapes.map(e => e.nom).join(' → ');
+
+function renderMap() {
+  pinLayer.clearLayers(); tripLayer.clearLayers(); pins.clear();
+  const vis = villes.filter(visible);
+  const visitedDeps = new Set(vis.map(c => c.dep));
+  depLayers.forEach((l, code) => l.getElement()?.classList.toggle('visited', visitedDeps.has(code)));
+
+  for (const t of trajets.filter(visible)) {
+    const g = trajetGeo(t);
+    const popup = `<strong>${esc(trajetLabel(t))}</strong>` + (t.annee ? `<br>${esc(t.annee)}` : '') +
+      `<br>${t.etapes.map(e => esc(e.nom)).join(' → ')}<br>${g.km.toLocaleString('fr')} km`;
+    for (const s of g.segs) {
+      L.polyline(s.coords, { color: t.couleur, weight: 4, opacity: .9, dashArray: s.rail ? null : '2 8', lineCap: 'round' })
+        .bindPopup(popup).addTo(tripLayer);
+    }
+  }
+  for (const c of vis) {
+    pins.set(c.code, L.circleMarker([c.lat, c.lon], { radius: 6.5, className: 'pin' }).bindPopup(villePopup(c)).addTo(pinLayer));
+  }
+
+  draftLayer.clearLayers();
+  if (draft) {
+    const pts = draft.etapes.map(e => [e.lat, e.lon]);
+    if (pts.length > 1) L.polyline(pts, { className: 'draft-line', interactive: false }).addTo(draftLayer);
+    pts.forEach((p, i) => L.marker(p, {
+      interactive: false,
+      icon: L.divIcon({ className: '', html: `<div class="stop-num">${i + 1}</div>`, iconSize: [22, 22], iconAnchor: [11, 11] })
+    }).addTo(draftLayer));
+  }
+}
+
+// ======================================================================
+// Carnet
+// ======================================================================
+function render() {
+  document.querySelectorAll('.edit-only').forEach(el => { el.hidden = !canWrite; });
+  $('#readonly').hidden = canWrite;
+  if (!canWrite) draft = null;
+  renderFiltre(); renderStats(); renderVilles(); renderTrajets(); renderDraft(); renderMap();
+}
+
+function renderStats() {
+  const v = villes.filter(visible), t = trajets.filter(visible);
+  const deps = new Set(v.map(c => c.dep)).size;
+  const km = t.reduce((s, x) => s + trajetGeo(x).km, 0);
+  const p = (n, w) => `<b>${n.toLocaleString('fr')}</b> ${w}${n > 1 ? 's' : ''}`;
+  $('#stats').innerHTML = [
+    p(v.length, 'ville'), `<span><b>${deps}</b>/96 départements</span>`,
+    p(t.length, 'trajet'), km ? `<span><b>${km.toLocaleString('fr')}</b> km en train</span>` : ''
+  ].filter(Boolean).map(s => s.startsWith('<span') ? s : `<span>${s}</span>`).join('') +
+    (filtre ? `<span>en ${esc(filtre)}</span>` : '');
+}
+
+function renderFiltre() {
+  const years = [...new Set([...villes, ...trajets].map(x => x.annee).filter(Boolean).map(String))].sort().reverse();
+  if (filtre && !years.includes(filtre)) filtre = '';
+  $('#filtre').innerHTML = '<option value="">Toutes les années</option>' +
+    years.map(y => `<option${y === filtre ? ' selected' : ''}>${y}</option>`).join('');
+}
+
+function villeRow(c) {
+  const photos = safeUrl(c.photos);
+  return `<button class="name" data-act="focus"><strong>${esc(c.nom)}</strong><small>${esc(depLabel(c.dep))}${c.note ? ' · ' + esc(c.note) : ''}</small></button>` +
+    (c.annee ? `<span class="year">${esc(c.annee)}</span>` : '') +
+    (photos ? `<a class="icon" href="${esc(photos)}" target="_blank" rel="noopener" title="Voir les photos" aria-label="Voir les photos">📷</a>` : '') +
+    (canWrite ? `<button class="icon" data-act="edit" title="Année, photos, note" aria-label="Modifier les infos">✎</button>` +
+      `<button class="icon" data-act="del" title="Retirer" aria-label="Retirer ${esc(c.nom)}">✕</button>` : '');
+}
+
+function renderVilles() {
+  const list = $('#villes');
+  const shown = villes.filter(visible).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  if (!ready) { list.innerHTML = '<li class="empty">Ouverture du carnet…</li>'; return; }
+  if (!shown.length) {
+    list.innerHTML = villes.length
+      ? `<li class="empty">Aucune ville notée pour ${esc(filtre)}.</li>`
+      : `<li class="empty"><strong>Aucune ville pour l’instant.</strong>
+         ${canWrite ? 'Tape le nom d’une ville ci-dessus, ou touche la carte là où tu es allé.' : ''}</li>`;
+    return;
+  }
+  list.innerHTML = shown.map(c => `
+    <li data-code="${esc(c.code)}">
+      <div class="row">${villeRow(c)}</div>
+      <form class="details"${editing === c.code ? '' : ' hidden'}>
+        <label>Année de visite<input class="field" name="annee" type="number" inputmode="numeric" min="1900" max="2100" value="${esc(c.annee)}"></label>
+        <label>Lien de l’album Google Photos<input class="field" name="photos" type="url" placeholder="https://photos.app.goo.gl/…" value="${esc(c.photos)}"></label>
+        <label>Note<textarea class="field" name="note" rows="2">${esc(c.note)}</textarea></label>
+      </form>
+    </li>`).join('');
+}
+
+// Suppression en deux temps (les boîtes de confirmation ne s'affichent pas ici)
+function armed(btn, label) {
+  if (btn.dataset.armed) return true;
+  const prev = btn.textContent;
+  btn.dataset.armed = '1'; btn.classList.add('armed'); btn.textContent = label;
+  setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.classList.remove('armed'); btn.textContent = prev; } }, 3000);
+  return false;
+}
+
+$('#villes').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'), li = e.target.closest('li[data-code]');
+  if (!btn || !li) return;
+  const c = villes.find(v => v.code === li.dataset.code);
+  const act = btn.dataset.act;
+  if (act === 'focus') {
+    map.setView([c.lat, c.lon], Math.max(map.getZoom(), 8));
+    pins.get(c.code)?.openPopup();
+  } else if (act === 'edit') {
+    const form = li.querySelector('form');
+    form.hidden = !form.hidden;
+    editing = form.hidden ? null : c.code;
+    if (!form.hidden) form.annee.focus();
+  } else if (act === 'del' && armed(btn, 'Retirer ?')) {
+    villes = villes.filter(v => v !== c);
+    persist('villes'); render();
+  }
+});
+$('#villes').addEventListener('submit', e => e.preventDefault());
+$('#villes').addEventListener('change', e => {
+  const li = e.target.closest('li[data-code]');
+  const c = villes.find(v => v.code === li.dataset.code);
+  const name = e.target.name, v = e.target.value.trim();
+  if (name === 'photos' && v && !safeUrl(v)) { toast('Le lien doit commencer par https://'); return; }
+  if (v) c[name] = name === 'annee' ? +v : v; else delete c[name];
+  persist('villes');
+  li.querySelector('.row').innerHTML = villeRow(c);
+  renderFiltre(); renderStats(); renderMap();
+});
+
+function addVille(c) {
+  if (!villes.some(v => v.code === c.code)) {
+    const v = { code: c.code, nom: c.nom, dep: c.dep, lat: c.lat, lon: c.lon };
+    if (filtre) v.annee = +filtre;
+    villes.push(v);
+    persist('villes'); render();
+    toast(`${c.nom} ajoutée`);
+  }
+  map.setView([c.lat, c.lon], Math.max(map.getZoom(), 7));
+  pins.get(c.code)?.openPopup();
+}
+
+function renderTrajets() {
+  const list = $('#trajets');
+  const shown = trajets.filter(visible);
+  if (!ready) { list.innerHTML = ''; return; }
+  if (!shown.length) {
+    list.innerHTML = draft ? '' : trajets.length
+      ? `<li class="empty">Aucun trajet noté pour ${esc(filtre)}.</li>`
+      : `<li class="empty"><strong>Aucun trajet pour l’instant.</strong>
+         ${canWrite ? 'Crée un trajet en ajoutant ses étapes : le tracé suit les voies ferrées et les kilomètres sont comptés.' : ''}</li>`;
+    return;
+  }
+  list.innerHTML = shown.map(t => {
+    const g = trajetGeo(t);
+    const offRail = g.segs.some(s => !s.rail);
+    return `<li data-id="${esc(t.id)}"><div class="row">
+      <span class="swatch" style="background:${esc(t.couleur)}"></span>
+      <button class="name" data-act="focus"><strong>${esc(trajetLabel(t))}</strong>
+        <small>${t.annee ? esc(t.annee) + ' · ' : ''}${t.etapes.length} étapes · ${g.km.toLocaleString('fr')} km${offRail ? ' · une partie hors rail' : ''}</small></button>
+      ${canWrite ? `<button class="icon" data-act="edit" title="Modifier" aria-label="Modifier le trajet">✎</button>
+      <button class="icon" data-act="del" title="Supprimer" aria-label="Supprimer le trajet">✕</button>` : ''}
+    </div></li>`;
+  }).join('');
+}
+
+$('#trajets').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'), li = e.target.closest('li[data-id]');
+  if (!btn || !li) return;
+  const t = trajets.find(x => x.id === li.dataset.id);
+  if (btn.dataset.act === 'focus') {
+    map.fitBounds(L.latLngBounds(trajetGeo(t).segs.flatMap(s => s.coords)), { padding: [30, 30] });
+  } else if (btn.dataset.act === 'edit') {
+    draft = structuredClone(t); render();
+  } else if (btn.dataset.act === 'del' && armed(btn, 'Supprimer ?')) {
+    trajets = trajets.filter(x => x !== t);
+    persist('trajets'); render();
+  }
+});
+
+// ---------- Édition d'un trajet ----------
+function renderDraft() {
+  $('#draft').hidden = !draft;
+  $('#new-trip').hidden = !!draft;
+  if (!draft) return;
+  $('#d-nom').value = draft.nom || '';
+  $('#d-annee').value = draft.annee || '';
+  $('#d-etapes').innerHTML = draft.etapes.map((e, i) => `
+    <li data-i="${i}"><span>${esc(e.nom)} <small class="muted">${esc(e.dep)}</small></span>
+      ${i ? `<button class="icon" data-act="up" title="Monter" aria-label="Monter ${esc(e.nom)}">↑</button>` : ''}
+      <button class="icon" data-act="del" title="Retirer" aria-label="Retirer ${esc(e.nom)}">✕</button></li>`).join('');
+  const n = draft.etapes.length;
+  $('#d-hint').textContent = n < 2
+    ? 'Ajoute les villes dans l’ordre du voyage, ou touche la carte. Le tracé suit les voies ferrées.'
+    : `${trajetGeo(draft).km.toLocaleString('fr')} km par le rail.`;
+}
+function addEtape(c) {
+  draft.etapes.push({ code: c.code, nom: c.nom, dep: c.dep, lat: c.lat, lon: c.lon });
+  renderDraft(); renderMap();
+}
+$('#new-trip').onclick = () => {
+  draft = { nom: '', annee: filtre ? +filtre : '', etapes: [] };
+  render(); $('#d-q').focus();
+};
+$('#d-nom').oninput = e => { draft.nom = e.target.value.trim(); };
+$('#d-annee').oninput = e => { draft.annee = e.target.value ? +e.target.value : ''; };
+$('#d-etapes').addEventListener('click', e => {
+  const act = e.target.closest('[data-act]')?.dataset.act, i = +e.target.closest('li')?.dataset.i;
+  if (act === 'del') draft.etapes.splice(i, 1);
+  else if (act === 'up') [draft.etapes[i - 1], draft.etapes[i]] = [draft.etapes[i], draft.etapes[i - 1]];
+  else return;
+  renderDraft(); renderMap();
+});
+$('#d-cancel').onclick = () => { draft = null; render(); };
+$('#d-save').onclick = () => {
+  if (draft.etapes.length < 2) { toast('Ajoute au moins deux étapes.'); return; }
+  const t = { ...draft, id: draft.id || String(Date.now()), couleur: draft.couleur || PALETTE[trajets.length % PALETTE.length] };
+  if (!t.nom) delete t.nom;
+  if (!t.annee) delete t.annee;
+  const i = trajets.findIndex(x => x.id === t.id);
+  if (i >= 0) trajets[i] = t; else trajets.push(t);
+  draft = null;
+  persist('trajets'); render();
+  map.fitBounds(L.latLngBounds(trajetGeo(t).segs.flatMap(s => s.coords)), { padding: [30, 30] });
+};
+
+// ---------- Recherche ----------
+function attachSearch(input, ul, onPick) {
+  let results = [], active = -1;
+  const show = () => {
+    ul.innerHTML = results.map((c, i) =>
+      `<li data-i="${i}"${i === active ? ' class="active"' : ''}>${esc(c.nom)} <small>${esc(depLabel(c.dep))}</small></li>`).join('');
+  };
+  const pick = c => { onPick(c); input.value = ''; results = []; show(); };
+  input.addEventListener('input', () => { results = searchCommunes(input.value); active = -1; show(); });
+  input.addEventListener('keydown', e => {
+    if (!results.length) return;
+    if (e.key === 'ArrowDown') { active = (active + 1) % results.length; show(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { active = (active - 1 + results.length) % results.length; show(); e.preventDefault(); }
+    else if (e.key === 'Enter') { pick(results[Math.max(active, 0)]); e.preventDefault(); }
+    else if (e.key === 'Escape') { results = []; show(); }
+  });
+  ul.addEventListener('mousedown', e => e.preventDefault());
+  ul.addEventListener('click', e => { const li = e.target.closest('li'); if (li) pick(results[+li.dataset.i]); });
+  input.addEventListener('blur', () => setTimeout(() => { results = []; show(); }, 150));
+}
+attachSearch($('#q'), $('#q-sugg'), addVille);
+attachSearch($('#d-q'), $('#d-sugg'), addEtape);
+
+map.on('click', e => {
+  if (!canWrite || !ready) return;
+  if (tab === 'trajets' && !draft) return;
+  const c = communeAt(e.latlng.lat, e.latlng.lng);
+  if (tab === 'trajets') addEtape(c); else addVille(c);
+});
+
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  $('#panel-villes').hidden = tab !== 'villes';
+  $('#panel-trajets').hidden = tab !== 'trajets';
+});
+$('#filtre').onchange = e => { filtre = e.target.value; render(); };
+
+// ---------- Export / import ----------
+$('#export').onclick = async () => {
+  const json = JSON.stringify({ villes, trajets }, null, 2);
+  if (store.downloads) {
+    try { await store.downloads.save({ filename: 'mes-villes.json', data: json }); }
+    catch (e) { if (e?.code !== 'declined') toast('L’export n’est pas disponible ici.'); }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  a.download = 'mes-villes.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('#import').onchange = async e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const vs = Array.isArray(data) ? data : data.villes || [];
+    let nv = 0, nt = 0;
+    for (const c of vs) {
+      if (!c.code || villes.some(x => x.code === c.code)) continue;
+      // anciens fichiers : "departement" en toutes lettres
+      const dep = c.dep || (c.departement?.match(/\(([^)]+)\)$/) || [])[1] || COMM.find(x => x.code === c.code)?.dep || '';
+      const v = { code: c.code, nom: c.nom, dep, lat: +c.lat, lon: +c.lon };
+      for (const k of ['annee', 'photos', 'note']) if (c[k]) v[k] = c[k];
+      villes.push(v); nv++;
+    }
+    for (const t of data.trajets || []) {
+      if (!t.id || !Array.isArray(t.etapes) || trajets.some(x => x.id === t.id)) continue;
+      const nt0 = { id: t.id, couleur: t.couleur || PALETTE[trajets.length % PALETTE.length],
+        etapes: t.etapes.map(s => ({ code: s.code, nom: s.nom, dep: s.dep || COMM.find(x => x.code === s.code)?.dep || '', lat: +s.lat, lon: +s.lon })) };
+      if (t.nom) nt0.nom = t.nom;
+      if (t.annee) nt0.annee = t.annee;
+      trajets.push(nt0); nt++;
+    }
+    persist('villes', 'trajets'); render();
+    toast(`${nv} ville${nv > 1 ? 's' : ''} et ${nt} trajet${nt > 1 ? 's' : ''} importés`);
+  } catch { toast('Ce fichier n’est pas un export de Mes villes de France.'); }
+};
+$('#clear').onclick = e => {
+  if (!villes.length && !trajets.length) return;
+  if (!armed(e.currentTarget, 'Tout effacer, vraiment ?')) return;
+  villes = []; trajets = []; draft = null;
+  persist('villes', 'trajets'); render();
+};
+
+render();
+initStore();
+</script>
